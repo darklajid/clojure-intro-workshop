@@ -76,15 +76,38 @@
        (pretty-print-world new-world) ; print it
        (recur new-world update-fn (dec cycles))))) ; run again until cycles are zero
 
+(defn get-neighbours
+  "Creates a list of all neighbouring cells"
+  [[x y]]
+  (for [x' [-1 0 1] 
+        y' [-1 0 1]
+        :when (not= [0 0] [x' y'])]
+    [(+ x x') (+ y y')]))
 
+(defn get-live-neighbours
+  "The number of neighbouring cells that are alive / 1"
+  [world [x y]]
+  (->>
+    (get-neighbours [x y])
+    (map (partial element-at world))
+    (reduce + 0)))
+
+(defn cell-lives?
+  "Choose the sword .. or choose the ball"
+  [world [x y]]
+    (let [alive (element-at world [x y])
+          living (get-live-neighbours world [x y])]
+      (or
+        (and (= alive 1) (or (= living 2) (= living 3)))
+        (and (= alive 0) (= living 3)))))
 
 ;; Get going there
 ;; ----------------------------------------------------------------------------
 (defn update-world [world]
   ;; This is your chance to change the world! ;)
-  (create-world (world-width  world)
-                (world-height world))
-  )  ;; Return new world
+  (for [y (range (world-height world))]
+    (for [x (range (world-width world))]
+      (if (cell-lives? world [x y]) 1 0))))
 
 ;; To start the GUI call:
 ;; (start-rendering)
